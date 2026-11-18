@@ -64,19 +64,50 @@ $$('.chip').forEach((chip) =>
 
 const c = band.contact;
 const link = (href, label) => `<a href="${href}" data-cursor="hover">${label}</a>`;
-$('#bookContact').innerHTML = `
-  <div class="contact"><small>Bookings</small>${
-    c.email ? link(`mailto:${c.email}`, c.email) : '<span>Add email</span>'
-  }${c.phone ? `<br />${link(`tel:${c.phone.replace(/[^\d+]/g, '')}`, c.phone)}` : ''}</div>
-  <div class="contact"><small>Instagram</small>${
-    c.instagram ? link(`https://instagram.com/${c.instagram.replace('@', '')}`, c.instagram) : '<span>Add handle</span>'
-  }</div>
-  <div class="contact"><small>YouTube / Spotify</small>${
-    c.youtube || c.spotify
-      ? [c.youtube && link(c.youtube, 'YouTube'), c.spotify && link(c.spotify, 'Spotify')].filter(Boolean).join(' · ')
-      : '<span>Add links</span>'
-  }</div>
-  <div class="contact"><small>Based in</small>Kerala, India</div>`;
+const ARROW = '<svg class="reach__arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13 13 3M5.5 3H13v7.5" /></svg>';
+const tel = c.phone ? c.phone.replace(/[^\d+]/g, '') : '';
+const ig = c.instagram ? c.instagram.replace('@', '') : '';
+const rows = [
+  c.email && { k: 'Bookings', v: c.email, href: `mailto:${c.email}`, copy: c.email, color: '#e11d2e' },
+  c.phone && { k: 'Call', v: c.phone, href: `tel:${tel}`, copy: c.phone, color: '#ff5a1f' },
+  c.instagram && { k: 'Instagram', v: c.instagram, href: `https://instagram.com/${ig}`, ext: true, color: '#ff2d9a' },
+  c.youtube || c.spotify
+    ? { k: 'Watch & listen', v: c.youtube ? 'YouTube' : 'Spotify', href: c.youtube || c.spotify, ext: true, color: '#3da5ff' }
+    : { k: 'Watch & listen', v: 'Coming soon', soon: true, color: '#3da5ff' },
+].filter(Boolean);
+$('#bookContact').innerHTML = `<ul class="reach">${rows
+  .map((r, i) =>
+    r.soon
+      ? `<li class="reach__row is-soon" style="--c:${r.color}"><span class="reach__k">${r.k}</span><span class="reach__v">${r.v}</span></li>`
+      : `<li class="reach__row" style="--c:${r.color}">
+          <span class="reach__k"><i>0${i + 1}</i>${r.k}</span>
+          <a class="reach__v" href="${r.href}" ${r.ext ? 'target="_blank" rel="noopener"' : ''} data-cursor="hover">${r.v}${ARROW}</a>
+          ${r.copy ? `<button class="reach__copy" data-copy="${r.copy}" data-cursor="hover" aria-label="Copy ${r.k}">Copy</button>` : ''}
+        </li>`
+  )
+  .join('')}</ul>`;
+
+$$('.reach__copy').forEach((btn) =>
+  btn.addEventListener('click', async () => {
+    const text = btn.dataset.copy;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = Object.assign(document.createElement('textarea'), { value: text });
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    btn.textContent = 'Copied';
+    btn.classList.add('is-done');
+    flow.pulse(0.6);
+    setTimeout(() => {
+      btn.textContent = 'Copy';
+      btn.classList.remove('is-done');
+    }, 1700);
+  })
+);
 
 $('#bookCta').addEventListener('click', () => {
   if (!c.email) return;
@@ -483,7 +514,7 @@ initInstruments();
 /* ------------------------------------------------------------------ */
 /* Book                                                                */
 /* ------------------------------------------------------------------ */
-gsap.from('.book__cta, .chips .chip, .book__contact .contact', {
+gsap.from('.book__cta, .chips .chip, .reach__row', {
   y: 50,
   opacity: 0,
   duration: 1,
@@ -501,6 +532,15 @@ if (emblem && !reduceMotion) {
     if (emblemLive) emblem.style.setProperty('--g', (22 + flow.energy * 46).toFixed(1));
   });
 }
+
+gsap.from('.foot__mark span', {
+  yPercent: 70,
+  opacity: 0,
+  duration: 1.6,
+  stagger: 0.1,
+  ease: 'expo.out',
+  scrollTrigger: { trigger: '.foot', start: 'top 92%' },
+});
 
 /* ------------------------------------------------------------------ */
 /* Movements: the page as a score                                      */

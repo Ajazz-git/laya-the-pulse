@@ -836,3 +836,136 @@ main {
 @media (max-width: 900px) {
   .book__emblem { position: relative; right: auto; top: auto; width: min(70vw, 360px); margin: 0 auto 8px; }
 }
+
+/* ---------- Reach (contact rows) ---------- */
+.book__contact { display: block; margin-top: 64px; }
+.reach { border-top: 1px solid rgba(255, 255, 255, 0.14); }
+.reach__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(150px, 0.34fr) 1fr auto;
+  align-items: center;
+  gap: 18px;
+  padding: clamp(18px, 2.6vw, 30px) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  isolation: isolate;
+}
+.reach__row::before {
+  content: '';
+  position: absolute;
+  inset: 0 calc(var(--pad) * -1);
+  z-index: -1;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--c) 16%, transparent) 40%, transparent);
+  opacity: 0;
+  transform: scaleX(0.6);
+  transform-origin: left;
+  transition: opacity 0.6s, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reach__row:hover::before,
+.reach__row:focus-within::before { opacity: 1; transform: scaleX(1); }
+.reach__k {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-size: 11px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--c);
+  font-weight: 600;
+}
+.reach__k i { font-style: normal; font-weight: 400; color: var(--mute); letter-spacing: 0.2em; }
+.reach__v {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28em;
+  min-width: 0;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(24px, 4.1vw, 64px);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.4s;
+}
+.reach__v:hover { color: var(--c); transform: translateX(16px); }
+.reach__arrow {
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  opacity: 0.35;
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s;
+}
+.reach__v:hover .reach__arrow { opacity: 1; transform: translate(6px, -6px); }
+.reach__copy {
+  padding: 9px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+.reach__copy:hover { border-color: var(--c); color: var(--c); }
+.reach__copy.is-done { background: var(--c); border-color: var(--c); color: #0a0a0a; }
+.reach__row.is-soon .reach__v { color: var(--mute); font-style: italic; }
+.reach__row.is-soon { grid-template-columns: minmax(150px, 0.34fr) 1fr; }
+@media (max-width: 700px) {
+  .reach__row {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: 'k copy' 'v v';
+    gap: 10px 12px;
+  }
+  .reach__k { grid-area: k; }
+  .reach__v { grid-area: v; font-size: clamp(20px, 6vw, 40px); }
+  .reach__copy { grid-area: copy; }
+  .reach__row.is-soon { grid-template-columns: 1fr; grid-template-areas: 'k' 'v'; }
+}
+
+/* ---------- Footer ---------- */
+.foot { margin-top: auto; padding-top: clamp(70px, 12vh, 140px); position: relative; }
+.foot__mark {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(110px, 30vw, 520px);
+  line-height: 0.74;
+  letter-spacing: 0.02em;
+  margin: 0 -0.02em 0.05em;
+  user-select: none;
+  pointer-events: none;
+}
+.foot__mark span {
+  display: inline-block;
+  background: linear-gradient(180deg, rgba(225, 29, 46, 0.55) 0%, rgba(225, 29, 46, 0.08) 70%, transparent 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.16);
+}
+.foot__bar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  padding: 22px clamp(0px, 16vw, 260px) 22px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.foot__top { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); transition: color 0.3s; }
+.foot__top svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.3; transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.foot__top:hover { color: var(--red); }
+.foot__top:hover svg { transform: translateY(-4px); }
+@media (max-width: 900px) {
+  .foot__bar { padding-right: 0; padding-bottom: 58px; }
+}
