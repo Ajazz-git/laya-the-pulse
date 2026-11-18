@@ -262,8 +262,7 @@ ul {
   text-align: center;
   padding: 120px var(--pad) 140px;
   background:
-    radial-gradient(ellipse 60% 50% at 50% 38%, rgba(225, 29, 46, 0.22), transparent 70%),
-    var(--bg);
+    radial-gradient(ellipse 60% 50% at 50% 38%, rgba(225, 29, 46, 0.22), transparent 70%);
   overflow: hidden;
 }
 .hero__word {
@@ -527,7 +526,7 @@ ul {
   position: absolute;
   z-index: 2;
   right: var(--pad);
-  bottom: 40px;
+  bottom: 84px;
   max-width: 34ch;
   font-size: 13px;
   line-height: 1.6;
@@ -542,7 +541,7 @@ ul {
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(225, 29, 46, 0.2), transparent 70%), var(--bg);
+  background: radial-gradient(ellipse 60% 40% at 50% 30%, rgba(225, 29, 46, 0.2), transparent 70%);
 }
 .book__cta {
   font-family: var(--serif);
@@ -608,4 +607,67 @@ ul {
 
 @media (prefers-reduced-motion: reduce) {
   .grain, .scroll-hint i, .sound-toggle i { animation: none; }
+}
+
+/* ---------- Flow field + movements ---------- */
+#flow {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+main {
+  position: relative;
+  z-index: 1;
+}
+.movements {
+  position: fixed;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+}
+.movements a {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  font-family: var(--serif);
+  font-size: 13px;
+  color: var(--mute);
+  mix-blend-mode: difference;
+  transition: color 0.4s, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.movements a.is-active {
+  color: #fff;
+  transform: scale(1.35);
+}
+.movement-label {
+  position: fixed;
+  right: calc(var(--pad) + 44px);
+  bottom: 26px;
+  z-index: 60;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--mute);
+  opacity: 0;
+  mix-blend-mode: difference;
+  pointer-events: none;
+}
+.movement-label b {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--ink);
+  margin-right: 8px;
+}
+@media (max-width: 900px) {
+  .movements { display: none; }
 }

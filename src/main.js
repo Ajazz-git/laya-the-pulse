@@ -5,6 +5,7 @@ import Lenis from 'lenis';
 import { band } from './data.js';
 import { audio } from './audio.js';
 import { initBass } from './bass.js';
+import { flow, initFlow } from './flow.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -74,11 +75,55 @@ $('#bookCta').addEventListener('click', () => {
 /* ------------------------------------------------------------------ */
 /* Smooth scroll                                                       */
 /* ------------------------------------------------------------------ */
-const lenis = new Lenis({ lerp: 0.09, smoothWheel: !reduceMotion });
+const lenis = new Lenis({ lerp: 0.075, smoothWheel: !reduceMotion });
 lenis.on('scroll', ScrollTrigger.update);
 gsap.ticker.add((t) => lenis.raf(t * 1000));
 gsap.ticker.lagSmoothing(0);
 lenis.stop();
+
+/* ------------------------------------------------------------------ */
+/* Flow field, scroll lean, magnetic controls                          */
+/* ------------------------------------------------------------------ */
+initFlow();
+
+const hexToRgb = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+const RED = [225, 29, 46];
+function tint(rgb, alpha, duration = 1.6) {
+  gsap.to(flow.color, { 0: rgb[0], 1: rgb[1], 2: rgb[2], duration, ease: 'power2.out', overwrite: true });
+  gsap.to(flow, { alpha, duration, ease: 'power2.out', overwrite: 'auto' });
+}
+
+// Scroll speed feeds the ribbons; headlines lean slightly into the motion.
+const leanEls = $$('.section-title, .book__cta, .chapter__name');
+const leanTo = leanEls.map((el) => gsap.quickTo(el, 'skewY', { duration: 0.7, ease: 'power3' }));
+gsap.ticker.add(() => {
+  const v = lenis.velocity || 0;
+  flow.scroll += (lenis.progress - flow.scroll) * 0.08;
+  flow.energy = Math.max(flow.energy, Math.min(1.5, Math.abs(v) / 28));
+  if (!reduceMotion) {
+    const lean = gsap.utils.clamp(-3, 3, v * -0.1);
+    leanTo.forEach((f) => f(lean));
+  }
+});
+
+if (finePointer && !reduceMotion) {
+  $$('.btn, .chip, .sound-toggle, .nav nav a').forEach((el) => {
+    const mx = gsap.quickTo(el, 'x', { duration: 0.6, ease: 'power3' });
+    const my = gsap.quickTo(el, 'y', { duration: 0.6, ease: 'power3' });
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      mx((e.clientX - r.left - r.width / 2) * 0.32);
+      my((e.clientY - r.top - r.height / 2) * 0.32);
+    });
+    el.addEventListener('pointerleave', () => {
+      mx(0);
+      my(0);
+    });
+  });
+}
 
 document.addEventListener('click', (e) => {
   const a = e.target.closest('a[href^="#"]');
@@ -170,14 +215,14 @@ function heroIn() {
     .from('.hero .eyebrow, .hero__tag', { y: 20, opacity: 0, duration: 1, stagger: 0.15 }, '-=0.9')
     .from('#heroMembers span', { y: 16, opacity: 0, stagger: 0.08, duration: 0.8 }, '-=0.7')
     .from('.scroll-hint', { opacity: 0, duration: 1 }, '-=0.5')
-    .to('.nav, .sound-toggle', { opacity: 1, duration: 1 }, '-=1.2');
+    .to('.nav, .sound-toggle, .movements, .movement-label', { opacity: 1, duration: 1.2 }, '-=1.2');
 }
 
 if (reduceMotion) {
   introTl.kill();
   $('#intro').remove();
   soundBtn.classList.add('is-off');
-  gsap.set('.nav, .sound-toggle', { opacity: 1 });
+  gsap.set('.nav, .sound-toggle, .movements, .movement-label', { opacity: 1 });
   lenis.start();
 }
 
@@ -223,6 +268,7 @@ gsap.to({}, {
   repeat: -1,
   onRepeat() {
     dots.forEach((d, i) => d.classList.toggle('is-on', i === beat));
+    if (ACCENTS.includes(beat)) flow.pulse(beat === 0 ? 0.35 : 0.18);
     beat = (beat + 1) % dots.length;
   },
 });
@@ -236,6 +282,13 @@ gsap
 /* ------------------------------------------------------------------ */
 /* Lineup                                                              */
 /* ------------------------------------------------------------------ */
+gsap.from('.section-title', {
+  clipPath: 'inset(0 0 100% 0)',
+  y: 70,
+  duration: 1.4,
+  ease: 'expo.out',
+  scrollTrigger: { trigger: '.section-title', start: 'top 85%' },
+});
 gsap.from('.lineup__list li', {
   y: 60,
   opacity: 0,
@@ -265,6 +318,7 @@ if (finePointer) {
       li.classList.add('is-active');
       prevImg.src = m.img;
       prev.style.setProperty('--c', m.color);
+      tint(hexToRgb(m.color), 0.85, 0.9);
       gsap.to(prev, { opacity: 1, scale: 1, duration: 0.45, ease: 'expo.out' });
     });
     li.addEventListener('pointerleave', () => {
@@ -274,6 +328,7 @@ if (finePointer) {
   list.addEventListener('pointerleave', () => {
     list.classList.remove('has-hover');
     gsap.to(prev, { opacity: 0, scale: 0.85, duration: 0.3 });
+    tint(RED, 0.6, 1.2);
   });
 }
 
@@ -305,4 +360,28 @@ gsap.from('.book__cta, .chips .chip, .book__contact .contact', {
   stagger: 0.06,
   ease: 'expo.out',
   scrollTrigger: { trigger: '#book', start: 'top 65%' },
+});
+
+/* ------------------------------------------------------------------ */
+/* Movements: the page as a score                                      */
+/* ------------------------------------------------------------------ */
+const MOVEMENTS = [
+  { id: 'hero', n: 'I', name: 'Prelude', color: RED, alpha: 0.9 },
+  { id: 'manifesto', n: 'II', name: 'Andante', color: [214, 74, 86], alpha: 0.4 },
+  { id: 'lineup', n: 'III', name: 'Ensemble', color: RED, alpha: 0.6 },
+  { id: 'bass', n: 'IV', name: 'Groove', color: hexToRgb('#ff5a1f'), alpha: 0.28 },
+  { id: 'book', n: 'V', name: 'Coda', color: RED, alpha: 0.85 },
+];
+const mvWrap = $('#movements');
+const mvLabel = $('#movementLabel');
+mvWrap.innerHTML = MOVEMENTS.map((m) => `<a href="#${m.id}" aria-label="${m.name}" data-cursor="hover">${m.n}</a>`).join('');
+const mvLinks = $$('a', mvWrap);
+
+MOVEMENTS.forEach((m, i) => {
+  const enter = () => {
+    mvLinks.forEach((a, j) => a.classList.toggle('is-active', i === j));
+    mvLabel.innerHTML = `<b>${m.n}</b>${m.name}`;
+    tint(m.color, m.alpha);
+  };
+  ScrollTrigger.create({ trigger: `#${m.id}`, start: 'top 55%', end: 'bottom 55%', onEnter: enter, onEnterBack: enter });
 });

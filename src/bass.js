@@ -56,6 +56,7 @@ export function initBass() {
     s.glow = 1;
     s.cool = 0.08;
     audio.pluck(s.freq, 0.25 + strength * 0.75);
+    window.dispatchEvent(new CustomEvent('laya:beat', { detail: { power: 0.25 + strength * 0.6 } }));
   }
 
   function onMove(e) {
