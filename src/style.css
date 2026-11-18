@@ -292,7 +292,7 @@ ul {
   position: absolute;
   left: var(--pad);
   right: var(--pad);
-  bottom: 70px;
+  bottom: 96px;
   display: flex;
   justify-content: space-between;
   gap: 12px;
