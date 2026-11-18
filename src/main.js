@@ -1,18 +1,26 @@
 import './style.css';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
 import { band } from './data.js';
 import { audio } from './audio.js';
 import { initBass } from './bass.js';
 import { flow, initFlow } from './flow.js';
+import { createDrumhead } from './intro.js';
+import { buildChapters, animateChapters, FIRST_CHAPTER } from './chapters.js';
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = matchMedia('(hover: hover) and (pointer: fine)').matches;
+const hexToRgb = (hex) => {
+  const n = parseInt(hex.slice(1), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+};
+const RED = [225, 29, 46];
 
 /* ------------------------------------------------------------------ */
 /* Content                                                             */
@@ -23,17 +31,19 @@ $('#heroMembers').innerHTML = band.members
   .map((m) => `<span><b style="--c:${m.color}"></b>${m.name} · ${m.role}</span>`)
   .join('');
 
-$('#manifestoText').innerHTML = band.manifesto
-  .split(' ')
-  .map((w) => `<span class="word">${w}</span>`)
-  .join(' ');
+// Manifesto statements: *word|memberId* lights the word in that member's colour.
+const parse = (s) =>
+  s.replace(/\*([^|*]+)\|(\w+)\*/g, (_, word, id) => {
+    const m = band.members.find((x) => x.id === id);
+    return `<span class="hl" style="--c:${m ? m.color : '#e11d2e'}">${word}</span>`;
+  });
+$('#manifestoStage').innerHTML = band.manifesto.map((t) => `<p class="stmt">${parse(t)}</p>`).join('');
 
-const PLAYABLE = { bass: '#bass' };
 $('#lineupList').innerHTML = band.members
   .map(
     (m, i) => `
     <li style="--c:${m.color}" data-id="${m.id}">
-      <a href="${PLAYABLE[m.id] || '#'}" data-cursor="hover">
+      <a href="#ch-${m.id}" data-cursor="hover">
         <span class="n">0${i + 1}</span>
         <span class="name">${m.name}</span>
         <span class="role">${m.role}</span>
@@ -41,6 +51,8 @@ $('#lineupList').innerHTML = band.members
     </li>`
   )
   .join('');
+
+$('#chapters').innerHTML = buildChapters(band.members);
 
 $('#eventChips').innerHTML = band.events.map((e) => `<button class="chip" data-cursor="hover">${e}</button>`).join('');
 $$('.chip').forEach((chip) =>
@@ -72,6 +84,12 @@ $('#bookCta').addEventListener('click', () => {
   window.location.href = `mailto:${c.email}?subject=${subject}`;
 });
 
+// Warm the portrait cache so the lineup stage never waits on a network request.
+band.members.forEach((m) => {
+  const i = new Image();
+  i.src = m.img;
+});
+
 /* ------------------------------------------------------------------ */
 /* Smooth scroll                                                       */
 /* ------------------------------------------------------------------ */
@@ -81,22 +99,34 @@ gsap.ticker.add((t) => lenis.raf(t * 1000));
 gsap.ticker.lagSmoothing(0);
 lenis.stop();
 
+function scrollToEl(el) {
+  const dist = Math.abs(el.getBoundingClientRect().top);
+  lenis.scrollTo(el, { duration: Math.min(3, Math.max(1.4, dist / 1500)) });
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="#"]');
+  if (!a) return;
+  const id = a.getAttribute('href');
+  e.preventDefault();
+  if (id === '#') return;
+  const el = $(id);
+  if (el) scrollToEl(el);
+});
+
 /* ------------------------------------------------------------------ */
 /* Flow field, scroll lean, magnetic controls                          */
 /* ------------------------------------------------------------------ */
 initFlow();
+flow.alpha = 0; // the ribbons are born from the drumhead
+let ribbonsOn = false;
+let pendingAlpha = 0.9;
 
-const hexToRgb = (hex) => {
-  const n = parseInt(hex.slice(1), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-};
-const RED = [225, 29, 46];
 function tint(rgb, alpha, duration = 1.6) {
+  pendingAlpha = alpha;
   gsap.to(flow.color, { 0: rgb[0], 1: rgb[1], 2: rgb[2], duration, ease: 'power2.out', overwrite: true });
-  gsap.to(flow, { alpha, duration, ease: 'power2.out', overwrite: 'auto' });
+  if (ribbonsOn) gsap.to(flow, { alpha, duration, ease: 'power2.out', overwrite: 'auto' });
 }
 
-// Scroll speed feeds the ribbons; headlines lean slightly into the motion.
 const leanEls = $$('.section-title, .book__cta, .chapter__name');
 const leanTo = leanEls.map((el) => gsap.quickTo(el, 'skewY', { duration: 0.7, ease: 'power3' }));
 gsap.ticker.add(() => {
@@ -125,16 +155,6 @@ if (finePointer && !reduceMotion) {
   });
 }
 
-document.addEventListener('click', (e) => {
-  const a = e.target.closest('a[href^="#"]');
-  if (!a) return;
-  const id = a.getAttribute('href');
-  e.preventDefault();
-  if (id === '#') return;
-  const el = $(id);
-  if (el) lenis.scrollTo(el, { duration: 1.6 });
-});
-
 /* ------------------------------------------------------------------ */
 /* Cursor                                                              */
 /* ------------------------------------------------------------------ */
@@ -162,51 +182,10 @@ soundBtn.addEventListener('click', () => {
 });
 
 /* ------------------------------------------------------------------ */
-/* Intro                                                               */
+/* Intro: the drumhead                                                 */
 /* ------------------------------------------------------------------ */
-gsap.set('#pulse', { transformOrigin: '50% 50%' });
-
-const introTl = gsap.timeline({ delay: 0.3 });
-introTl
-  .to('#pulsePath', { strokeDashoffset: 0, duration: 1.7, ease: 'power2.inOut' })
-  .to('#pulse', { scaleY: 1.5, duration: 0.14, yoyo: true, repeat: 3, ease: 'power1.inOut' }, '-=0.5')
-  .fromTo(
-    '.intro-word span',
-    { yPercent: 50, opacity: 0, filter: 'blur(16px)' },
-    { yPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 1.2, stagger: 0.12, ease: 'expo.out' },
-    '-=0.2'
-  )
-  .to('#pulsePath', { opacity: 0.2, duration: 1 }, '<')
-  .to('.intro-sub', { opacity: 1, duration: 0.8 }, '-=0.5')
-  .fromTo('.intro-actions', { y: 16 }, { opacity: 1, y: 0, duration: 0.8 }, '-=0.4');
-
 let entered = false;
-function enter(withSound) {
-  if (entered) return;
-  entered = true;
-  introTl.kill();
-
-  if (withSound) {
-    audio.enable();
-    audio.kick();
-  } else {
-    soundBtn.classList.add('is-off');
-  }
-
-  gsap
-    .timeline()
-    .to('.intro-actions, .intro-sub', { opacity: 0, duration: 0.3 })
-    .to('.intro-word', { scale: 1.2, opacity: 0, duration: 0.7, ease: 'power2.in' }, '<')
-    .to('#pulsePath', { opacity: 0, duration: 0.4 }, '<')
-    .to('#intro', { yPercent: -100, duration: 1.1, ease: 'expo.inOut' }, '-=0.2')
-    .add(() => {
-      lenis.start();
-      $('#intro').remove();
-    })
-    .add(heroIn, '-=0.7');
-}
-
-$$('[data-sound]').forEach((b) => b.addEventListener('click', () => enter(b.dataset.sound === 'on')));
+let drum = null;
 
 function heroIn() {
   gsap
@@ -218,18 +197,67 @@ function heroIn() {
     .to('.nav, .sound-toggle, .movements, .movement-label', { opacity: 1, duration: 1.2 }, '-=1.2');
 }
 
+function finishIntro() {
+  gsap
+    .timeline()
+    .to('#intro', { opacity: 0, duration: 0.9, ease: 'power2.inOut' })
+    .add(() => {
+      document.body.classList.remove('is-intro');
+      lenis.start();
+      drum?.stop();
+      $('#intro').remove();
+      heroIn();
+    }, '-=0.45');
+}
+
+function onBeat({ index, power }) {
+  if (index === 0) audio.hit('kick', power);
+  else if (index === 3 || index === 5) audio.hit('tom', power * 0.8);
+  else audio.hit('tick', power);
+}
+
+function onBurst() {
+  audio.hit('kick', 1.2);
+  ribbonsOn = true;
+  gsap.to(flow, { alpha: pendingAlpha, duration: 2.4, ease: 'power2.out' });
+  flow.pulse(1.2);
+  gsap
+    .timeline()
+    .fromTo(
+      '.intro-word span',
+      { yPercent: 50, opacity: 0, filter: 'blur(16px)' },
+      { yPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 1.3, stagger: 0.11, ease: 'expo.out' }
+    )
+    .to('.intro-sub', { opacity: 1, duration: 0.9 }, '-=0.7');
+  gsap.delayedCall(2.5, finishIntro);
+}
+
+function enter(withSound) {
+  if (entered) return;
+  entered = true;
+  if (withSound) audio.enable();
+  else soundBtn.classList.add('is-off');
+  gsap.to('.intro-start', { opacity: 0, y: 10, duration: 0.5, ease: 'power2.in' });
+  drum.play();
+}
+
 if (reduceMotion) {
-  introTl.kill();
   $('#intro').remove();
+  document.body.classList.remove('is-intro');
   soundBtn.classList.add('is-off');
+  ribbonsOn = true;
+  flow.alpha = pendingAlpha;
   gsap.set('.nav, .sound-toggle, .movements, .movement-label', { opacity: 1 });
   lenis.start();
+} else {
+  drum = createDrumhead($('#drumhead'), { onBeat, onBurst });
+  gsap.fromTo('.intro-start', { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 1.2, delay: 1.6, ease: 'power2.out' });
+  $$('[data-sound]').forEach((b) => b.addEventListener('click', () => enter(b.dataset.sound === 'on')));
 }
 
 /* ------------------------------------------------------------------ */
 /* Hero                                                                */
 /* ------------------------------------------------------------------ */
-// Letters drift apart and fade as you scroll away.
 gsap.to('.hero__word', {
   yPercent: -22,
   gap: '0.7em',
@@ -238,7 +266,6 @@ gsap.to('.hero__word', {
   scrollTrigger: { trigger: '#hero', start: 'top top', end: 'bottom top', scrub: true },
 });
 
-// Subtle mouse parallax, each letter at a different depth.
 if (finePointer && !reduceMotion) {
   const letters = $$('.hero__word .ch').map((el, i) => ({
     x: gsap.quickTo(el, 'x', { duration: 0.8, ease: 'power3' }),
@@ -256,31 +283,99 @@ if (finePointer && !reduceMotion) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Manifesto: pinned word reveal + 7/8 meter                           */
+/* Manifesto: three statements, a 7-beat wheel                         */
 /* ------------------------------------------------------------------ */
-const dotsWrap = $('#meterDots');
-const ACCENTS = [0, 3, 5]; // 3 + 2 + 2
-dotsWrap.innerHTML = Array.from({ length: 7 }, (_, i) => `<i class="${ACCENTS.includes(i) ? 'is-accent' : ''}"></i>`).join('');
-const dots = $$('i', dotsWrap);
+const ACCENTS = [0, 3, 5]; // the 7 is felt as 3 + 2 + 2
+const tala = $('#tala');
+{
+  const R0 = 120;
+  const pts = Array.from({ length: 7 }, (_, i) => {
+    const a = -Math.PI / 2 + (i * 2 * Math.PI) / 7;
+    return [Math.cos(a) * R0, Math.sin(a) * R0];
+  });
+  let svg = '<circle class="ring" r="150"/><circle class="ring" r="75"/><circle class="ring" r="120"/>';
+  [[0, 2], [3, 4], [5, 6]].forEach(([a, b]) => {
+    const [x1, y1] = pts[a];
+    const [x2, y2] = pts[b];
+    svg += `<path class="arc" style="stroke:rgba(225,29,46,.55);stroke-width:2" d="M${x1} ${y1} A${R0} ${R0} 0 0 1 ${x2} ${y2}"/>`;
+  });
+  pts.forEach(([x, y], i) => {
+    const acc = ACCENTS.includes(i);
+    svg += `<circle class="node ${acc ? 'is-accent' : ''}" cx="${x}" cy="${y}" r="${acc ? 8 : 5}"/>`;
+  });
+  tala.innerHTML = svg;
+}
+const nodes = $$('.node', tala);
 let beat = 0;
+let beatLive = false;
 gsap.to({}, {
   duration: 0.26,
   repeat: -1,
   onRepeat() {
-    dots.forEach((d, i) => d.classList.toggle('is-on', i === beat));
-    if (ACCENTS.includes(beat)) flow.pulse(beat === 0 ? 0.35 : 0.18);
-    beat = (beat + 1) % dots.length;
+    nodes.forEach((n, i) => n.classList.toggle('is-on', i === beat));
+    if (beatLive && ACCENTS.includes(beat)) flow.pulse(beat === 0 ? 0.35 : 0.18);
+    beat = (beat + 1) % 7;
   },
 });
 
-gsap
-  .timeline({
-    scrollTrigger: { trigger: '#manifesto', start: 'top top', end: '+=170%', pin: true, scrub: 0.6 },
-  })
-  .to('.manifesto__text .word', { opacity: 1, stagger: 0.12, ease: 'none' });
+const STMT_TINT = [RED, hexToRgb('#a64dff'), hexToRgb('#3da5ff')];
+
+function setupManifesto() {
+  const stmts = $$('.stmt');
+  if (reduceMotion) {
+    $('#manifesto').classList.add('manifesto--static');
+    return;
+  }
+  gsap.set(tala, { yPercent: -50 });
+  const splits = stmts.map((el) => SplitText.create(el, { type: 'lines', mask: 'lines' }));
+  splits.forEach((s) =>
+    (s.masks || []).forEach((m) => {
+      m.style.paddingBottom = '0.16em';
+      m.style.marginBottom = '-0.16em';
+      m.style.paddingRight = '0.12em';
+    })
+  );
+  splits.forEach((s) => gsap.set(s.lines, { yPercent: 118 }));
+
+  const tl = gsap.timeline({ defaults: { ease: 'none' } });
+  tl.to(tala, { rotation: 140, duration: 9.4 }, 0);
+  tl.to(tala, { scale: 1.12, duration: 9.4 }, 0);
+  splits.forEach((s, i) => {
+    const t = i * 3;
+    tl.to(s.lines, { yPercent: 0, duration: 1, stagger: 0.14, ease: 'power3.out' }, t);
+    if (i < splits.length - 1) {
+      tl.to(s.lines, { yPercent: -118, duration: 0.9, stagger: 0.1, ease: 'power3.in' }, t + 2.15);
+    }
+  });
+  tl.set({}, {}, 9.4);
+
+  let cur = -1;
+  ScrollTrigger.create({
+    trigger: '#manifesto',
+    start: 'top top',
+    end: '+=330%',
+    pin: true,
+    refreshPriority: 10, // measure the pin first so everything below is placed after it
+    animation: tl,
+    scrub: 0.8,
+    onToggle: (self) => (beatLive = self.isActive),
+    onUpdate: (self) => {
+      const idx = Math.min(2, Math.floor(self.progress * 3));
+      if (idx !== cur) {
+        cur = idx;
+        flow.pulse(0.6);
+        tint(STMT_TINT[idx], 0.5, 1.4);
+      }
+    },
+  });
+}
+(document.fonts?.ready || Promise.resolve()).then(() => {
+  setupManifesto();
+  ScrollTrigger.refresh();
+});
 
 /* ------------------------------------------------------------------ */
-/* Lineup                                                              */
+/* Lineup: a weightless portrait stage                                 */
 /* ------------------------------------------------------------------ */
 gsap.from('.section-title', {
   clipPath: 'inset(0 0 100% 0)',
@@ -300,54 +395,84 @@ gsap.from('.lineup__list li', {
 
 if (finePointer) {
   const list = $('#lineupList');
-  const prev = $('#lineupPreview');
-  const prevImg = $('img', prev);
-  gsap.set(prev, { scale: 0.85 });
-  const px = gsap.quickTo(prev, 'x', { duration: 0.6, ease: 'power3' });
-  const py = gsap.quickTo(prev, 'y', { duration: 0.6, ease: 'power3' });
+  const stage = $('#stage');
+  const layers = $$('.stage__img', stage);
+  let front = 0;
+  let currentId = null;
+  let visible = false;
+  let settle;
 
+  const sw = () => stage.offsetWidth;
+  const sh = () => stage.offsetHeight;
+  const px = gsap.quickTo(stage, 'x', { duration: 1.25, ease: 'power3' });
+  const py = gsap.quickTo(stage, 'y', { duration: 1.25, ease: 'power3' });
+  const pr = gsap.quickTo(stage, 'rotation', { duration: 1.4, ease: 'power3' });
+
+  function showMember(m) {
+    if (m.id === currentId) return;
+    currentId = m.id;
+    const next = 1 - front;
+    $('img', layers[next]).src = m.img;
+    gsap.fromTo(
+      layers[next],
+      { opacity: 0, scale: 1.14, filter: 'blur(16px)' },
+      { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 1.3, ease: 'power3.out', overwrite: true }
+    );
+    gsap.to(layers[front], { opacity: 0, scale: 0.95, filter: 'blur(12px)', duration: 1, ease: 'power2.inOut', overwrite: true });
+    front = next;
+  }
+
+  function place(e, instant) {
+    const x = e.clientX - sw() / 2 + sw() * 0.34;
+    const y = e.clientY - sh() / 2;
+    if (instant) gsap.set(stage, { x, y });
+    else {
+      px(x);
+      py(y);
+    }
+  }
+
+  list.addEventListener('pointerenter', (e) => {
+    if (!visible) {
+      place(e, true);
+      visible = true;
+      gsap.to(stage, { opacity: 1, duration: 1.1, ease: 'power2.out', overwrite: 'auto' });
+    }
+  });
   list.addEventListener('pointermove', (e) => {
-    px(e.clientX + 36);
-    py(e.clientY - prev.offsetHeight / 2);
+    place(e, false);
+    pr(gsap.utils.clamp(-7, 7, e.movementX * 0.22));
+    clearTimeout(settle);
+    settle = setTimeout(() => pr(0), 90);
+  });
+  list.addEventListener('pointerleave', () => {
+    visible = false;
+    currentId = null;
+    list.classList.remove('has-hover');
+    $$('li', list).forEach((l) => l.classList.remove('is-active'));
+    gsap.to(stage, { opacity: 0, duration: 1.3, ease: 'power2.out', overwrite: 'auto' });
+    tint(RED, 0.6, 1.4);
   });
 
   $$('li', list).forEach((li) => {
     const m = band.members.find((x) => x.id === li.dataset.id);
     li.addEventListener('pointerenter', () => {
       list.classList.add('has-hover');
-      li.classList.add('is-active');
-      prevImg.src = m.img;
-      prev.style.setProperty('--c', m.color);
+      $$('li', list).forEach((l) => l.classList.toggle('is-active', l === li));
+      showMember(m);
       tint(hexToRgb(m.color), 0.85, 0.9);
-      gsap.to(prev, { opacity: 1, scale: 1, duration: 0.45, ease: 'expo.out' });
     });
-    li.addEventListener('pointerleave', () => {
-      li.classList.remove('is-active');
+    li.addEventListener('click', () => {
+      flow.pulse(1.2);
+      gsap.to(stage, { scale: 1.2, opacity: 0, duration: 0.9, ease: 'power3.in', onComplete: () => gsap.set(stage, { scale: 1 }) });
     });
-  });
-  list.addEventListener('pointerleave', () => {
-    list.classList.remove('has-hover');
-    gsap.to(prev, { opacity: 0, scale: 0.85, duration: 0.3 });
-    tint(RED, 0.6, 1.2);
   });
 }
 
 /* ------------------------------------------------------------------ */
-/* Bass chapter                                                        */
+/* Chapters                                                            */
 /* ------------------------------------------------------------------ */
-gsap.to('#bass', {
-  '--wash': 1,
-  ease: 'none',
-  scrollTrigger: { trigger: '#bass', start: 'top 85%', end: 'top 25%', scrub: true },
-});
-gsap.from('.chapter--bass .chapter__head > *', {
-  y: 70,
-  opacity: 0,
-  duration: 1.3,
-  stagger: 0.12,
-  ease: 'expo.out',
-  scrollTrigger: { trigger: '#bass', start: 'top 55%' },
-});
+animateChapters({ reduceMotion, onEnter: () => flow.pulse(0.9) });
 initBass();
 
 /* ------------------------------------------------------------------ */
@@ -365,13 +490,16 @@ gsap.from('.book__cta, .chips .chip, .book__contact .contact', {
 /* ------------------------------------------------------------------ */
 /* Movements: the page as a score                                      */
 /* ------------------------------------------------------------------ */
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 const MOVEMENTS = [
-  { id: 'hero', n: 'I', name: 'Prelude', color: RED, alpha: 0.9 },
-  { id: 'manifesto', n: 'II', name: 'Andante', color: [214, 74, 86], alpha: 0.4 },
-  { id: 'lineup', n: 'III', name: 'Ensemble', color: RED, alpha: 0.6 },
-  { id: 'bass', n: 'IV', name: 'Groove', color: hexToRgb('#ff5a1f'), alpha: 0.28 },
-  { id: 'book', n: 'V', name: 'Coda', color: RED, alpha: 0.85 },
-];
+  { id: 'hero', name: 'Prelude', color: RED, alpha: 0.9 },
+  { id: 'manifesto', name: 'Andante', color: [214, 74, 86], alpha: 0.4 },
+  { id: 'lineup', name: 'Ensemble', color: RED, alpha: 0.6 },
+  ...band.members.map((m) => ({ id: `ch-${m.id}`, name: m.chapter, color: hexToRgb(m.color), alpha: 0.4 })),
+  { id: 'book', name: 'Coda', color: RED, alpha: 0.85 },
+].map((m, i) => ({ ...m, n: ROMAN[i] }));
+void FIRST_CHAPTER;
+
 const mvWrap = $('#movements');
 const mvLabel = $('#movementLabel');
 mvWrap.innerHTML = MOVEMENTS.map((m) => `<a href="#${m.id}" aria-label="${m.name}" data-cursor="hover">${m.n}</a>`).join('');

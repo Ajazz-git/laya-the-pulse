@@ -46,6 +46,43 @@ export const audio = {
     o.stop(t + 0.45);
   },
 
+  // Hits for the opening drumhead. kind: 'kick' | 'tom' | 'tick'
+  hit(kind, power = 1) {
+    if (!on) return;
+    const t = ctx.currentTime;
+    if (kind === 'kick' || kind === 'tom') {
+      const base = kind === 'kick' ? 130 : 210;
+      const end = kind === 'kick' ? 40 : 95;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(base, t);
+      o.frequency.exponentialRampToValueAtTime(end, t + 0.18);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.85 * power, t + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + (kind === 'kick' ? 0.45 : 0.3));
+      o.connect(g).connect(master);
+      o.start(t);
+      o.stop(t + 0.5);
+      return;
+    }
+    // tick: a short filtered noise burst, like a rim or shaker
+    const len = Math.floor(ctx.sampleRate * 0.06);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.value = 5200;
+    f.Q.value = 1.2;
+    const g = ctx.createGain();
+    g.gain.value = 0.32 * power;
+    src.connect(f).connect(g).connect(master);
+    src.start(t);
+  },
+
   // Plucked bass string. Upper partial added so small speakers can still hear it.
   pluck(freq, velocity = 0.6) {
     if (!on) return;

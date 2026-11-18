@@ -1,9 +1,17 @@
-// All editable content lives here. Fill in `contact` once you have the real details.
+// All editable content lives here. Fill in `contact` once the booking email and socials are ready.
+const B = import.meta.env.BASE_URL;
+
 export const band = {
   name: 'Laya',
   tagline: 'Rhythm, rooted. Where Kerala’s folk soul meets progressive rock.',
-  manifesto:
-    'Laya is the pulse that holds every raga, every rhythm cycle and every song together. We built a band on that one idea: the odd meters of progressive rock, the melodic memory of Kerala’s folk, and a bamboo flute where most bands keep a keyboard.',
+
+  // Manifesto statements. *word|memberId* lights that word in the member's colour.
+  manifesto: [
+    'Laya is the *pulse|drums* that holds every raga, every rhythm cycle and every song together.',
+    '*Odd meters|bass* and layered builds from progressive rock. The melodic memory of Kerala’s *folk|vocals*.',
+    'And a *bamboo flute|flute* where most bands keep a keyboard.',
+  ],
+
   contact: {
     email: '', // e.g. booking@layaband.in
     phone: '',
@@ -12,46 +20,78 @@ export const band = {
     spotify: '',
   },
   events: ['Festival', 'College', 'Corporate', 'Private celebration', 'Concert'],
+
+  // Order matches the lineup. Each member gets a chapter ("movement").
   members: [
     {
       id: 'vocals',
       name: 'Adrash Ajay',
+      first: 'Adrash',
       role: 'Lead Vocals',
+      chapter: 'Aria',
       color: '#ffd9a0',
       line: 'The voice that carries Laya’s story to the audience.',
-      img: `${import.meta.env.BASE_URL}members/adrash.jpg`,
+      bio: 'Adrash is the voice and frontman of Laya. His vocals carry the emotion of each song, moving from soft, folk-flavoured phrasing to full-throated rock power. Warm, expressive and always connected to the crowd, he turns every performance into a shared experience.',
+      brings: 'Melody, emotion & stage presence',
+      tags: ['Frontman', 'Folk phrasing', 'Rock power'],
+      entrance: 'rise',
+      img: `${B}members/adrash.webp`,
     },
     {
       id: 'drums',
       name: 'Balaraman VR',
+      first: 'Balaraman',
       role: 'Drums',
+      chapter: 'Tala',
       color: '#a64dff',
       line: 'The pulse behind the name.',
-      img: `${import.meta.env.BASE_URL}members/balaraman.jpg`,
+      bio: 'Balaraman is the rhythmic heartbeat of the band. His drumming is precise yet full of feel, handling the shifting time signatures of progressive rock while keeping the pulse that gives Laya its name. Powerful, dynamic and always smiling behind the kit, he lifts the energy of the whole stage.',
+      brings: 'Rhythm, groove & dynamics',
+      tags: ['Shifting time signatures', 'Groove as storytelling', 'Restrained to explosive'],
+      entrance: 'slam',
+      img: `${B}members/balaraman.webp`,
     },
     {
       id: 'flute',
       name: 'Kailasnath',
+      first: 'Kailasnath',
       role: 'Flute',
+      chapter: 'Breath',
       color: '#3da5ff',
       line: 'The breath that gives Laya its folk soul.',
-      img: `${import.meta.env.BASE_URL}members/kailasnath.jpg`,
+      bio: 'Kailasnath is the signature of Laya’s sound. His bamboo flute adds the folk and classical colour that sets the band apart from a conventional rock lineup, singing melodies over the heavy arrangements. Lyrical and deeply immersive, his playing gives the music its soul.',
+      brings: 'Folk and classical colour',
+      tags: ['Bamboo flute', 'Folk & classical', 'Flute-led hooks'],
+      entrance: 'drift',
+      img: `${B}members/kailasnath.webp`,
     },
     {
       id: 'bass',
       name: 'Tomson',
+      first: 'Tomson',
       role: 'Bass Guitar',
+      chapter: 'Groove',
       color: '#ff5a1f',
       line: 'Groove and depth, held together.',
-      img: `${import.meta.env.BASE_URL}members/tomson.jpg`,
+      bio: 'Tomson anchors the band as the link between rhythm and harmony. Playing a multi-string bass, he combines solid groove with melodic runs, adding depth and movement to every arrangement. Stylish and commanding on stage, he brings both weight and flair to the sound.',
+      brings: 'Low-end groove & harmony',
+      tags: ['Multi-string bass', 'Melodic runs', 'Commanding on stage'],
+      entrance: 'drop',
+      img: `${B}members/tomson.webp`,
     },
     {
       id: 'guitar',
       name: 'Leon',
+      first: 'Leon',
       role: 'Lead Guitar',
+      chapter: 'Edge',
       color: '#ff2d9a',
       line: 'The edge that takes Laya’s sound further.',
-      img: `${import.meta.env.BASE_URL}members/leon.jpg`,
+      bio: 'Leon drives the band’s progressive edge with expressive lead lines, tight riffs and melodic solos. Focused and technically sharp, he balances virtuosity with feel, letting each solo serve the song while pushing Laya’s sound into bigger, more cinematic territory.',
+      brings: 'Riffs, solos & progressive edge',
+      tags: ['Lead lines', 'Tight riffs', 'Cinematic solos'],
+      entrance: 'slice',
+      img: `${B}members/leon.webp`,
     },
   ],
 };

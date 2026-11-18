@@ -19,6 +19,7 @@ export function initBass() {
   let w = 0;
   let h = 0;
   let padX = 0;
+  let endX = 0; // strings stop short of the portrait on wide screens
   let running = false;
   let last = 0;
 
@@ -44,8 +45,9 @@ export function initBass() {
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     padX = Math.max(24, w * 0.06);
-    const top = h * 0.5;
-    const bottom = h * 0.86;
+    endX = w > 900 ? w * 0.56 : w - padX;
+    const top = h * 0.64;
+    const bottom = h * 0.93;
     strings.forEach((s, i) => (s.y = top + ((bottom - top) * i) / (strings.length - 1)));
   }
 
@@ -66,7 +68,7 @@ export function initBass() {
     pointer.x = x;
     pointer.y = y;
     pointer.inside = true;
-    if (pointer.py !== null && x > padX && x < w - padX) {
+    if (pointer.py !== null && x > padX && x < endX) {
       const speed = Math.abs(y - pointer.py);
       for (const s of strings) {
         const crossed = (pointer.py - s.y) * (y - s.y) < 0;
@@ -101,10 +103,10 @@ export function initBass() {
     ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 6; i++) {
-      const x = padX + ((w - padX * 2) * i) / 5;
+      const x = padX + ((endX - padX) * i) / 5;
       ctx.beginPath();
-      ctx.moveTo(x, h * 0.44);
-      ctx.lineTo(x, h * 0.92);
+      ctx.moveTo(x, h * 0.58);
+      ctx.lineTo(x, h * 0.97);
       ctx.stroke();
     }
 
@@ -117,7 +119,7 @@ export function initBass() {
 
       // magnetic pull toward the pointer when it hovers close to a string
       const dy = pointer.inside ? pointer.y - s.y : 999;
-      const near = Math.abs(dy) < 70 && pointer.x > padX && pointer.x < w - padX;
+      const near = Math.abs(dy) < 70 && pointer.x > padX && pointer.x < endX;
       const pull = near ? dy * 0.55 * (1 - Math.abs(dy) / 70) : 0;
 
       const alpha = 0.5 + s.glow * 0.5;
@@ -130,7 +132,7 @@ export function initBass() {
       ctx.beginPath();
       for (let k = 0; k <= N; k++) {
         const u = k / N;
-        const x = padX + (w - padX * 2) * u;
+        const x = padX + (endX - padX) * u;
         const vib = s.amp * Math.sin(Math.PI * u) * Math.cos(s.t * s.hz * Math.PI * 2);
         const bend = pull * Math.exp(-Math.pow(x - pointer.x, 2) / (2 * 170 * 170));
         const y = s.y + vib + bend;
