@@ -44,10 +44,10 @@ export function initBass() {
     canvas.width = Math.round(w * dpr);
     canvas.height = Math.round(h * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    padX = Math.max(24, w * 0.06);
-    endX = w > 900 ? w * 0.56 : w - padX;
-    const top = h * 0.64;
-    const bottom = h * 0.93;
+    padX = 38;
+    endX = w - 14;
+    const top = h * 0.1;
+    const bottom = h * 0.92;
     strings.forEach((s, i) => (s.y = top + ((bottom - top) * i) / (strings.length - 1)));
   }
 
@@ -105,8 +105,8 @@ export function initBass() {
     for (let i = 0; i < 6; i++) {
       const x = padX + ((endX - padX) * i) / 5;
       ctx.beginPath();
-      ctx.moveTo(x, h * 0.58);
-      ctx.lineTo(x, h * 0.97);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, h);
       ctx.stroke();
     }
 

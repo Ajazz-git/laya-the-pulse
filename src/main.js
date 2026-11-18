@@ -6,6 +6,7 @@ import Lenis from 'lenis';
 import { band } from './data.js';
 import { audio } from './audio.js';
 import { initBass } from './bass.js';
+import { initInstruments } from './instruments.js';
 import { flow, initFlow } from './flow.js';
 import { createDrumhead } from './intro.js';
 import { buildChapters, animateChapters, FIRST_CHAPTER } from './chapters.js';
@@ -65,8 +66,8 @@ const c = band.contact;
 const link = (href, label) => `<a href="${href}" data-cursor="hover">${label}</a>`;
 $('#bookContact').innerHTML = `
   <div class="contact"><small>Bookings</small>${
-    c.email ? link(`mailto:${c.email}`, c.email) : c.phone ? c.phone : '<span>Add email / phone</span>'
-  }</div>
+    c.email ? link(`mailto:${c.email}`, c.email) : '<span>Add email</span>'
+  }${c.phone ? `<br />${link(`tel:${c.phone.replace(/[^\d+]/g, '')}`, c.phone)}` : ''}</div>
   <div class="contact"><small>Instagram</small>${
     c.instagram ? link(`https://instagram.com/${c.instagram.replace('@', '')}`, c.instagram) : '<span>Add handle</span>'
   }</div>
@@ -175,6 +176,7 @@ if (finePointer) {
 /* Sound toggle                                                        */
 /* ------------------------------------------------------------------ */
 const soundBtn = $('#soundToggle');
+audio.onchange(() => soundBtn.classList.toggle('is-off', !audio.enabled));
 soundBtn.addEventListener('click', () => {
   if (!audio.ready) audio.enable();
   else audio.toggle();
@@ -308,7 +310,7 @@ const tala = $('#tala');
 const nodes = $$('.node', tala);
 let beat = 0;
 let beatLive = false;
-gsap.to({}, {
+const beatTween = gsap.to({}, {
   duration: 0.26,
   repeat: -1,
   onRepeat() {
@@ -317,6 +319,8 @@ gsap.to({}, {
     beat = (beat + 1) % 7;
   },
 });
+
+addEventListener('laya:tempo', (e) => beatTween.timeScale(e.detail ?? 1));
 
 const STMT_TINT = [RED, hexToRgb('#a64dff'), hexToRgb('#3da5ff')];
 
@@ -474,6 +478,7 @@ if (finePointer) {
 /* ------------------------------------------------------------------ */
 animateChapters({ reduceMotion, onEnter: () => flow.pulse(0.9) });
 initBass();
+initInstruments();
 
 /* ------------------------------------------------------------------ */
 /* Book                                                                */
@@ -486,6 +491,16 @@ gsap.from('.book__cta, .chips .chip, .book__contact .contact', {
   ease: 'expo.out',
   scrollTrigger: { trigger: '#book', start: 'top 65%' },
 });
+
+const emblem = $('#emblem');
+if (emblem && !reduceMotion) {
+  gsap.fromTo(emblem, { yPercent: 14, scale: 0.92, opacity: 0 }, { yPercent: -6, scale: 1, opacity: 0.95, ease: 'none', scrollTrigger: { trigger: '#book', start: 'top 85%', end: 'top 10%', scrub: 0.8 } });
+  let emblemLive = false;
+  ScrollTrigger.create({ trigger: '#book', start: 'top 90%', onToggle: (self) => (emblemLive = self.isActive) });
+  gsap.ticker.add(() => {
+    if (emblemLive) emblem.style.setProperty('--g', (22 + flow.energy * 46).toFixed(1));
+  });
+}
 
 /* ------------------------------------------------------------------ */
 /* Movements: the page as a score                                      */

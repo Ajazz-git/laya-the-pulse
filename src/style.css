@@ -209,15 +209,16 @@ body.is-intro .movement-label { opacity: 0; pointer-events: none; }
   justify-content: space-between;
   align-items: center;
   padding: 18px var(--pad);
-  mix-blend-mode: difference;
   opacity: 0;
 }
 .nav__logo img {
-  height: 40px;
-  width: auto;
-  border-radius: 8px;
+  height: 56px;
+  width: 56px;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(225, 29, 46, 0.35));
 }
 .nav nav {
+  mix-blend-mode: difference;
   display: flex;
   gap: clamp(14px, 3vw, 36px);
   font-size: 11px;
@@ -458,7 +459,7 @@ body.is-intro .movement-label { opacity: 0; pointer-events: none; }
 /* ---------- Chapters ---------- */
 .chapter {
   position: relative;
-  min-height: 100svh;
+  min-height: max(100svh, 880px);
   padding: 13vh var(--pad) 10vh;
   overflow: hidden;
   --wash: 0;
@@ -564,19 +565,10 @@ body.is-intro .movement-label { opacity: 0; pointer-events: none; }
   text-transform: uppercase;
   color: var(--accent);
 }
-#bassCanvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 3;
-  touch-action: none;
-}
 @media (max-width: 900px) {
   .chapter { padding-top: 12vh; }
   .chapter__head { width: 100%; }
   .chapter__side { position: relative; right: auto; top: auto; width: min(78vw, 420px); margin: 36px auto 0; }
-  #bassCanvas { z-index: 1; }
 }
 
 /* ---------- Book ---------- */
@@ -633,6 +625,7 @@ body.is-intro .movement-label { opacity: 0; pointer-events: none; }
 .contact span { color: var(--mute); }
 .contact a { text-decoration: underline; text-underline-offset: 4px; }
 .footer {
+  padding-right: clamp(0px, 16vw, 260px);
   margin-top: auto;
   padding-top: 80px;
   display: flex;
@@ -746,3 +739,100 @@ main {
 .manifesto--static .manifesto__pin { height: auto; padding-block: 20vh; }
 .manifesto--static .manifesto__stage { display: flex; flex-direction: column; gap: 12vh; }
 .manifesto--static .stmt { position: relative; top: auto; transform: none; }
+
+/* ---------- Instrument regions ---------- */
+.ic-box {
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--pad) - 8px);
+  top: 62%;
+  width: min(56%, 820px);
+  height: 34%;
+}
+.ic-box--drums { top: 67%; height: 29%; }
+.ic-box--vocals { top: 71%; height: 25%; }
+.ichan {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+#ic-drums { touch-action: manipulation; }
+.ctl {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin-top: 16px;
+  pointer-events: auto;
+  position: relative;
+  z-index: 5;
+}
+.ctl__btn {
+  padding: 11px 22px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ink);
+  transition: background 0.3s, color 0.3s;
+}
+.ctl__btn:hover, .ctl__btn.is-on { background: var(--accent); color: #0a0a0a; }
+.ctl label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.ctl output { min-width: 3ch; color: var(--accent); font-weight: 600; }
+.ctl input[type='range'] { accent-color: var(--accent); width: 140px; }
+.lyrics {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(26px, 3.3vw, 52px);
+  line-height: 1.08;
+}
+.lyrics p { position: absolute; inset: 0 0 auto 0; margin: 0; }
+.lyrics__base { color: rgba(255, 217, 160, 0.13); }
+.lyrics__lit {
+  color: #ffe9c6;
+  -webkit-mask-image: radial-gradient(circle 190px at var(--mx, 30%) var(--my, 30%), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
+  mask-image: radial-gradient(circle 190px at var(--mx, 30%) var(--my, 30%), #000 0%, rgba(0, 0, 0, 0.5) 45%, transparent 100%);
+}
+@media (max-width: 900px) {
+  .ic-box, .ic-box--drums, .ic-box--vocals {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    height: 280px;
+    margin-top: 28px;
+  }
+}
+
+/* ---------- Emblem ---------- */
+.book__emblem {
+  position: absolute;
+  right: calc(var(--pad) - 2vw);
+  top: 12vh;
+  width: min(40vw, 560px);
+  aspect-ratio: 1;
+  pointer-events: none;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 calc(var(--g, 24) * 1px) rgba(225, 29, 46, 0.35));
+  will-change: transform;
+}
+@media (max-width: 900px) {
+  .book__emblem { position: relative; right: auto; top: auto; width: min(70vw, 360px); margin: 0 auto 8px; }
+}

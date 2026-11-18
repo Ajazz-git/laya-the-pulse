@@ -4,6 +4,7 @@ export const flow = {
   color: [225, 29, 46],
   alpha: 0.9,
   energy: 0,
+  tempo: 1, // set by the drum chapter: the whole page follows Balaraman's tempo
   scroll: 0,
   mx: -9999,
   my: -9999,
@@ -38,6 +39,7 @@ export function initFlow() {
     flow.mx = e.clientX;
     flow.my = e.clientY;
   });
+  addEventListener('laya:tempo', (e) => (flow.tempo = e.detail ?? 1));
   addEventListener('laya:beat', (e) => flow.pulse(e.detail?.power ?? 0.4));
 
   let last = performance.now();
@@ -47,7 +49,7 @@ export function initFlow() {
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
     last = now;
     flow.energy *= Math.exp(-dt * 1.8);
-    t += dt * (0.3 + flow.energy * 0.9);
+    t += dt * (0.3 + flow.energy * 0.9) * flow.tempo;
 
     ctx.clearRect(0, 0, w, h);
     ctx.globalCompositeOperation = 'lighter';

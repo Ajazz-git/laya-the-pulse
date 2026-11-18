@@ -26,3 +26,11 @@ Edit `src/data.js` (members, colors, tagline, contact links). Member photos live
 
 ## Roadmap
 Drums, flute, lead guitar and vocals chapters · band mixer · "why book Laya" stacked cards · real photos, audio and video · booking form
+
+## Draft 3 (this build)
+- New transparent logo emblem (nav, favicon, Coda) · real contact details
+- Playable chapters: drums (pads, keys, 7/8 groove, site-wide tempo), flute (Mohanam breath line),
+  lead guitar (slide + bend), vocals (searchlight lyrics + optional mic-reactive waveform), bass strings
+
+## Still to do
+Contact form (after the email service is set up) · YouTube/Spotify links · videos & photos gallery · better photos

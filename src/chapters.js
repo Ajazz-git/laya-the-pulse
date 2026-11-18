@@ -14,20 +14,35 @@ const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'];
 // Chapters sit after the Prelude, Andante and Ensemble, so the first is movement IV.
 export const FIRST_CHAPTER = 3;
 
+const LYRICS = ['Rhythm, rooted.', 'Where Kerala’s folk soul meets progressive rock.'];
+
+const CONTROLS = {
+  drums: `<div class="ctl">
+        <button class="ctl__btn" id="grooveBtn" data-cursor="hover">Play groove</button>
+        <label>Tempo <input type="range" id="bpm" min="70" max="170" value="110" /> <output id="bpmOut">110</output> BPM</label>
+      </div>`,
+  vocals: `<div class="ctl"><button class="ctl__btn" id="micBtn" data-cursor="hover">Sing into it</button></div>`,
+};
+
 export function buildChapters(members) {
   return members
     .map((m, i) => {
       const rgb = hexToRgb(m.color).join(',');
+      const canvasId = m.id === 'bass' ? 'bassCanvas' : `ic-${m.id}`;
       return `
     <section id="ch-${m.id}" class="chapter" data-entrance="${m.entrance}" style="--accent:${m.color};--rgb:${rgb}">
       <div class="chapter__wash"></div>
-      ${m.id === 'bass' ? `<canvas id="bassCanvas" aria-label="Interactive bass strings. Drag across them to play."></canvas>` : ''}
       <div class="chapter__head">
         <p class="eyebrow">Movement ${ROMAN[FIRST_CHAPTER + i]} · ${m.chapter}</p>
         <h2 class="chapter__name" aria-label="${m.first}">${[...m.first].map((c) => `<span class="nm"><span class="nm__c">${c}</span></span>`).join('')}</h2>
         <p class="chapter__line">${m.line}</p>
         <p class="chapter__bio">${m.bio}</p>
-        ${m.id === 'bass' ? '<p class="chapter__hint"><span>Drag across the strings</span></p>' : ''}
+        <p class="chapter__hint"><span>${m.play.hint}</span></p>
+        ${CONTROLS[m.id] || ''}
+      </div>
+      <div class="ic-box ${m.id === 'drums' ? 'ic-box--drums' : m.id === 'vocals' ? 'ic-box--vocals' : ''}">
+        ${m.id === 'vocals' ? `<div class="lyrics" aria-hidden="true"><p class="lyrics__base">${LYRICS.join(' ')}</p><p class="lyrics__lit">${LYRICS.join(' ')}</p></div>` : ''}
+        <canvas class="ichan" id="${canvasId}" data-instrument="${m.id}" aria-label="${m.play.label}"></canvas>
       </div>
       <aside class="chapter__side">
         <div class="portrait"><div class="portrait__in"><img src="${m.img}" alt="${m.name}, ${m.role}" loading="lazy" /></div></div>
@@ -66,16 +81,18 @@ export function animateChapters({ reduceMotion, onEnter }) {
     const letters = sec.querySelectorAll('.nm__c');
     gsap.set(letters, { yPercent: 115 });
     // Everything else starts hidden.
-    gsap.set(sec.querySelectorAll('.eyebrow, .chapter__line, .chapter__bio, .meta > *, .chapter__hint'), { opacity: 0, y: 26 });
+    gsap.set(sec.querySelectorAll('.eyebrow, .chapter__line, .chapter__bio, .meta > *, .chapter__hint, .ctl'), { opacity: 0, y: 26 });
     gsap.set(q('.portrait'), { opacity: 0, x: e.x, y: e.y, scale: e.scale, rotate: e.rot, clipPath: e.clip[0], filter: `blur(${e.blur}px)` });
     gsap.set(q('.portrait__in'), { scale: e.img });
+    gsap.set(q('.ic-box'), { opacity: 0, y: 30 });
 
     const tl = gsap
       .timeline({ paused: true, defaults: { ease: 'expo.out' } })
       .to(q('.portrait'), { opacity: 1, x: 0, y: 0, scale: 1, rotate: 0, clipPath: e.clip[1], filter: 'blur(0px)', duration: e.dur, ease: e.ease })
       .to(q('.portrait__in'), { scale: 1, duration: e.dur * 1.25, ease: 'power3.out' }, 0)
       .to(letters, { yPercent: 0, duration: 1.3, stagger: 0.06 }, 0.15)
-      .to(sec.querySelectorAll('.eyebrow, .chapter__line, .chapter__bio, .chapter__hint'), { opacity: 1, y: 0, duration: 1.1, stagger: 0.12 }, 0.45)
+      .to(sec.querySelectorAll('.eyebrow, .chapter__line, .chapter__bio, .chapter__hint, .ctl'), { opacity: 1, y: 0, duration: 1.1, stagger: 0.12 }, 0.45)
+      .to(q('.ic-box'), { opacity: 1, y: 0, duration: 1.2 }, 0.9)
       .to(sec.querySelectorAll('.meta > *'), { opacity: 1, y: 0, duration: 1.1, stagger: 0.1 }, 0.8);
 
     ScrollTrigger.create({

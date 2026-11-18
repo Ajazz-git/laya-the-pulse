@@ -13,9 +13,9 @@ export const band = {
   ],
 
   contact: {
-    email: '', // e.g. booking@layaband.in
-    phone: '',
-    instagram: '',
+    email: 'thelayaofficial@gmail.com',
+    phone: '+91 98953 19602',
+    instagram: '@laya.official_',
     youtube: '',
     spotify: '',
   },
@@ -35,6 +35,7 @@ export const band = {
       brings: 'Melody, emotion & stage presence',
       tags: ['Frontman', 'Folk phrasing', 'Rock power'],
       entrance: 'rise',
+      play: { hint: 'Move to light the words', label: 'Vocals: a searchlight over the lyrics and a voice-reactive waveform' },
       img: `${B}members/adrash.webp`,
     },
     {
@@ -49,6 +50,7 @@ export const band = {
       brings: 'Rhythm, groove & dynamics',
       tags: ['Shifting time signatures', 'Groove as storytelling', 'Restrained to explosive'],
       entrance: 'slam',
+      play: { hint: 'Tap the pads, or press A S D F J K', label: 'Drum pads' },
       img: `${B}members/balaraman.webp`,
     },
     {
@@ -63,6 +65,7 @@ export const band = {
       brings: 'Folk and classical colour',
       tags: ['Bamboo flute', 'Folk & classical', 'Flute-led hooks'],
       entrance: 'drift',
+      play: { hint: 'Hold and slide up or down to play', label: 'Bamboo flute: hold and slide to play notes' },
       img: `${B}members/kailasnath.webp`,
     },
     {
@@ -77,6 +80,7 @@ export const band = {
       brings: 'Low-end groove & harmony',
       tags: ['Multi-string bass', 'Melodic runs', 'Commanding on stage'],
       entrance: 'drop',
+      play: { hint: 'Drag across the strings', label: 'Interactive bass strings. Drag across them to play.' },
       img: `${B}members/tomson.webp`,
     },
     {
@@ -91,6 +95,7 @@ export const band = {
       brings: 'Riffs, solos & progressive edge',
       tags: ['Lead lines', 'Tight riffs', 'Cinematic solos'],
       entrance: 'slice',
+      play: { hint: 'Hold, slide along the neck, pull to bend', label: 'Lead guitar: hold, slide along the neck and pull to bend' },
       img: `${B}members/leon.webp`,
     },
   ],
