@@ -19,7 +19,7 @@ export const band = {
       role: 'Lead Vocals',
       color: '#ffd9a0',
       line: 'The voice that carries Laya’s story to the audience.',
-      img: '/members/adrash.jpg',
+      img: `${import.meta.env.BASE_URL}members/adrash.jpg`,
     },
     {
       id: 'drums',
@@ -27,7 +27,7 @@ export const band = {
       role: 'Drums',
       color: '#a64dff',
       line: 'The pulse behind the name.',
-      img: '/members/balaraman.jpg',
+      img: `${import.meta.env.BASE_URL}members/balaraman.jpg`,
     },
     {
       id: 'flute',
@@ -35,7 +35,7 @@ export const band = {
       role: 'Flute',
       color: '#3da5ff',
       line: 'The breath that gives Laya its folk soul.',
-      img: '/members/kailasnath.jpg',
+      img: `${import.meta.env.BASE_URL}members/kailasnath.jpg`,
     },
     {
       id: 'bass',
@@ -43,7 +43,7 @@ export const band = {
       role: 'Bass Guitar',
       color: '#ff5a1f',
       line: 'Groove and depth, held together.',
-      img: '/members/tomson.jpg',
+      img: `${import.meta.env.BASE_URL}members/tomson.jpg`,
     },
     {
       id: 'guitar',
@@ -51,7 +51,7 @@ export const band = {
       role: 'Lead Guitar',
       color: '#ff2d9a',
       line: 'The edge that takes Laya’s sound further.',
-      img: '/members/leon.jpg',
+      img: `${import.meta.env.BASE_URL}members/leon.jpg`,
     },
   ],
 };
