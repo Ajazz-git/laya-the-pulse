@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LAYA — Rhythm, rooted</title>
+    <meta
+      name="description"
+      content="Laya is a five-piece progressive and folk rock band from Kerala, India. Bamboo flute, odd meters and live energy."
+    />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="./assets/index-D73cjabn.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CfVYpD4j.css">
+  </head>
+  <body class="is-intro">
+    <canvas id="flow" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="cursor" aria-hidden="true"><span></span></div>
+    <nav class="movements" id="movements" aria-label="Movements"></nav>
+    <p class="movement-label" id="movementLabel" aria-hidden="true"></p>
+
+    <!-- INTRO: a drumhead of dots -->
+    <section id="intro" aria-label="Introduction">
+      <canvas id="drumhead" aria-hidden="true"></canvas>
+      <h1 class="intro-word" aria-label="Laya">
+        <span>L</span><span>A</span><span>Y</span><span>A</span>
+      </h1>
+      <p class="intro-sub">Rhythm, rooted.</p>
+      <div class="intro-start">
+        <p class="intro-hint">Seven beats. Best with headphones.</p>
+        <div class="intro-actions">
+          <button class="btn" data-sound="on" data-cursor="hover">Enter with sound</button>
+          <button class="btn btn--ghost" data-sound="off" data-cursor="hover">Enter silent</button>
+        </div>
+      </div>
+    </section>
+
+    <button id="soundToggle" class="sound-toggle" aria-label="Toggle sound" data-cursor="hover">
+      <i></i><i></i><i></i><i></i>
+    </button>
+
+    <header class="nav">
+      <a class="nav__logo" href="#top" data-cursor="hover"><img src="./logo.png" alt="Laya" width="56" height="56" /></a>
+      <nav>
+        <a href="#manifesto" data-cursor="hover">Story</a>
+        <a href="#lineup" data-cursor="hover">Lineup</a>
+        <a href="#ch-vocals" data-cursor="hover">Chapters</a>
+        <a href="#book" data-cursor="hover">Book</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <!-- HERO -->
+      <section id="hero" class="hero">
+        <p class="eyebrow">Progressive · Folk Rock · Kerala, India</p>
+        <h2 class="hero__word" aria-label="Laya">
+          <span class="ch">L</span><span class="ch">A</span><span class="ch">Y</span><span class="ch">A</span>
+        </h2>
+        <p class="hero__tag"></p>
+        <div class="hero__members" id="heroMembers"></div>
+        <div class="scroll-hint"><span>Scroll</span><i></i></div>
+      </section>
+
+      <!-- MANIFESTO: three pinned statements -->
+      <section id="manifesto" class="manifesto">
+        <div class="manifesto__pin">
+          <svg class="tala" id="tala" viewBox="-160 -160 320 320" aria-hidden="true"></svg>
+          <div class="meter" aria-hidden="true">
+            <p class="meter__label">7 / 8 &nbsp;·&nbsp; <em>laya</em> = rhythm &amp; tempo</p>
+          </div>
+          <div class="manifesto__stage" id="manifestoStage"></div>
+        </div>
+      </section>
+
+      <!-- LINEUP -->
+      <section id="lineup" class="lineup">
+        <div class="stage" id="stage" aria-hidden="true">
+          <div class="stage__img"><img alt="" /></div>
+          <div class="stage__img"><img alt="" /></div>
+        </div>
+        <p class="eyebrow">The Lineup</p>
+        <h2 class="section-title">Five voices,<br /><em>one pulse.</em></h2>
+        <ul class="lineup__list" id="lineupList"></ul>
+      </section>
+
+      <!-- CHAPTERS: one per member, same order as the lineup -->
+      <div id="chapters"></div>
+
+      <!-- BOOK -->
+      <section id="book" class="book">
+        <img class="book__emblem" id="emblem" src="./logo-emblem.webp" alt="" aria-hidden="true" />
+        <p class="eyebrow">Booking</p>
+        <h2 class="book__cta" id="bookCta" data-cursor="hover">Let’s make<br /><em>some noise.</em></h2>
+        <div class="chips" id="eventChips"></div>
+        <div class="book__contact" id="bookContact"></div>
+        <footer class="foot">
+          <div class="foot__mark" aria-hidden="true"><span>L</span><span>A</span><span>Y</span><span>A</span></div>
+          <div class="foot__bar">
+            <span>© 2026 Laya · Progressive &amp; Folk Rock</span>
+            <span>Kerala, India</span>
+            <a class="foot__top" href="#top" data-cursor="hover">Back to top <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M6 11V1M1.5 5.5 6 1l4.5 4.5" /></svg></a>
+          </div>
+        </footer>
+      </section>
+    </main>
+
+  </body>
+</html>
